@@ -1,0 +1,15 @@
+Started GET "/" for ::1 at 2025-03-09 15:52:05 -0700
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Todo'*/[0m
+Processing by HomeController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering home/index.html.erb within layouts/application
+  Rendered home/index.html.erb within layouts/application (Duration: 0.1ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 13.7ms | GC: 5.5ms)
+Completed 200 OK in 55ms (Views: 16.6ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 5.5ms)
+
+
+Started GET "/assets/tailwind-6c5b67fa.css" for ::1 at 2025-03-09 15:52:05 -0700
+Started GET "/assets/application-7b96f028.css" for ::1 at 2025-03-09 15:52:05 -0700
+Started GET "/assets/application-c6bdb1a3.js" for ::1 at 2025-03-09 15:52:05 -0700
+Started GET "/assets/tailwindcss" for ::1 at 2025-03-09 15:52:05 -0700
+Started GET "/assets/application-5c5066a2.js.map" for ::1 at 2025-03-09 15:52:05 -0700
