@@ -25950,13 +25950,13 @@ var AttributeObserver = class {
   }
 };
 function add(map, key, value) {
-  fetch(map, key).add(value);
+  fetch2(map, key).add(value);
 }
 function del(map, key, value) {
-  fetch(map, key).delete(value);
+  fetch2(map, key).delete(value);
   prune(map, key);
 }
-function fetch(map, key) {
+function fetch2(map, key) {
   let values = map.get(key);
   if (!values) {
     values = /* @__PURE__ */ new Set();
@@ -29062,62 +29062,131 @@ var je = Object.assign(be, { Button: Ce, Panel: Re });
 
 // app/javascript/components/App.jsx
 var App = () => {
-  const [todos, setTodos] = (0, import_react25.useState)([
-    { id: 1, text: "Learn React", completed: false },
-    { id: 2, text: "Build a TODO app", completed: false },
-    { id: 3, text: "Deploy to production", completed: false }
-  ]);
-  const [newTodo, setNewTodo] = (0, import_react25.useState)("");
-  const addTodo = () => {
-    if (newTodo.trim() !== "") {
-      setTodos([...todos, { id: Date.now(), text: newTodo, completed: false }]);
-      setNewTodo("");
+  const [tasks, setTasks] = (0, import_react25.useState)([]);
+  const [newTask, setNewTask] = (0, import_react25.useState)("");
+  const [loading, setLoading] = (0, import_react25.useState)(true);
+  const [error2, setError] = (0, import_react25.useState)(null);
+  (0, import_react25.useEffect)(() => {
+    fetchTasks();
+  }, []);
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/tasks");
+      if (!response.ok) {
+        throw new Error("Failed to fetch tasks");
+      }
+      const data = await response.json();
+      setTasks(data);
+      setError(null);
+    } catch (err) {
+      setError("Error loading tasks: " + err.message);
+      console.error("Error fetching tasks:", err);
+    } finally {
+      setLoading(false);
     }
   };
-  const toggleTodo = (id) => {
-    setTodos(
-      todos.map(
-        (todo) => todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
-    );
-  };
-  const deleteTodo = (id) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
-  };
-  return /* @__PURE__ */ import_react25.default.createElement("div", { className: "max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg mt-10" }, /* @__PURE__ */ import_react25.default.createElement("h1", { className: "text-2xl font-bold text-center mb-6" }, "My TODO App"), /* @__PURE__ */ import_react25.default.createElement("div", { className: "mb-6 space-y-2" }, todos.map((todo) => /* @__PURE__ */ import_react25.default.createElement(je, { key: todo.id }, ({ open }) => /* @__PURE__ */ import_react25.default.createElement(import_react25.default.Fragment, null, /* @__PURE__ */ import_react25.default.createElement(je.Button, { className: "flex justify-between w-full px-4 py-2 text-sm font-medium text-left bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus-visible:ring focus-visible:ring-blue-500 focus-visible:ring-opacity-75" }, /* @__PURE__ */ import_react25.default.createElement("div", { className: "flex items-center" }, /* @__PURE__ */ import_react25.default.createElement(
-    "input",
-    {
-      type: "checkbox",
-      checked: todo.completed,
-      onChange: () => toggleTodo(todo.id),
-      className: "mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
+  const addTask = async () => {
+    if (newTask.trim() === "") return;
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ task: { title: newTask, completed: false } })
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create task");
+      }
+      const createdTask = await response.json();
+      setTasks([createdTask, ...tasks]);
+      setNewTask("");
+    } catch (err) {
+      setError("Error creating task: " + err.message);
+      console.error("Error creating task:", err);
     }
-  ), /* @__PURE__ */ import_react25.default.createElement("span", { className: todo.completed ? "line-through text-gray-500" : "" }, todo.text)), /* @__PURE__ */ import_react25.default.createElement("span", { className: "text-gray-500" }, open ? "\u25B2" : "\u25BC")), /* @__PURE__ */ import_react25.default.createElement(je.Panel, { className: "px-4 pt-2 pb-2 text-sm text-gray-500 bg-gray-50 rounded-b-lg" }, /* @__PURE__ */ import_react25.default.createElement("div", { className: "flex justify-between items-center" }, /* @__PURE__ */ import_react25.default.createElement("p", null, "Created: ", new Date(todo.id).toLocaleString()), /* @__PURE__ */ import_react25.default.createElement(
+  };
+  const toggleTask = async (id, completed) => {
+    try {
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ task: { completed: !completed } })
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update task");
+      }
+      const updatedTask = await response.json();
+      setTasks(
+        tasks.map((task) => task.id === id ? updatedTask : task)
+      );
+    } catch (err) {
+      setError("Error updating task: " + err.message);
+      console.error("Error updating task:", err);
+    }
+  };
+  const deleteTask = async (id) => {
+    try {
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: "DELETE"
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete task");
+      }
+      setTasks(tasks.filter((task) => task.id !== id));
+    } catch (err) {
+      setError("Error deleting task: " + err.message);
+      console.error("Error deleting task:", err);
+    }
+  };
+  return /* @__PURE__ */ import_react25.default.createElement("div", { className: "max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg mt-10" }, /* @__PURE__ */ import_react25.default.createElement("h1", { className: "text-2xl font-bold text-center mb-6" }, "My Task Manager"), error2 && /* @__PURE__ */ import_react25.default.createElement("div", { className: "mb-4 p-3 bg-red-100 text-red-700 rounded-lg" }, error2, /* @__PURE__ */ import_react25.default.createElement(
     "button",
     {
-      onClick: () => deleteTodo(todo.id),
-      className: "text-red-500 hover:text-red-700"
+      className: "ml-2 font-bold",
+      onClick: () => setError(null)
     },
-    "Delete"
-  ))))))), /* @__PURE__ */ import_react25.default.createElement("div", { className: "flex space-x-2" }, /* @__PURE__ */ import_react25.default.createElement(
+    "\xD7"
+  )), /* @__PURE__ */ import_react25.default.createElement("div", { className: "flex space-x-2 mb-6" }, /* @__PURE__ */ import_react25.default.createElement(
     "input",
     {
       type: "text",
-      value: newTodo,
-      onChange: (e3) => setNewTodo(e3.target.value),
-      placeholder: "Add a new todo...",
+      value: newTask,
+      onChange: (e3) => setNewTask(e3.target.value),
+      placeholder: "Add a new task...",
       className: "flex-grow px-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
-      onKeyPress: (e3) => e3.key === "Enter" && addTodo()
+      onKeyPress: (e3) => e3.key === "Enter" && addTask()
     }
   ), /* @__PURE__ */ import_react25.default.createElement(
     "button",
     {
-      onClick: addTodo,
-      disabled: newTodo.trim() === "",
-      className: `px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${newTodo.trim() === "" ? "bg-gray-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`
+      onClick: addTask,
+      disabled: newTask.trim() === "",
+      className: `px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${newTask.trim() === "" ? "bg-gray-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`
     },
     "Add"
-  )));
+  )), loading ? /* @__PURE__ */ import_react25.default.createElement("div", { className: "text-center py-4" }, /* @__PURE__ */ import_react25.default.createElement("div", { className: "animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" }), /* @__PURE__ */ import_react25.default.createElement("p", { className: "mt-2 text-gray-500" }, "Loading tasks...")) : (
+    /* Task List */
+    /* @__PURE__ */ import_react25.default.createElement("div", { className: "space-y-2" }, tasks.length === 0 ? /* @__PURE__ */ import_react25.default.createElement("p", { className: "text-center text-gray-500 py-4" }, "No tasks yet. Add one above!") : tasks.map((task) => /* @__PURE__ */ import_react25.default.createElement(je, { key: task.id }, ({ open }) => /* @__PURE__ */ import_react25.default.createElement(import_react25.default.Fragment, null, /* @__PURE__ */ import_react25.default.createElement(je.Button, { className: "flex justify-between w-full px-4 py-2 text-sm font-medium text-left bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus-visible:ring focus-visible:ring-blue-500 focus-visible:ring-opacity-75" }, /* @__PURE__ */ import_react25.default.createElement("div", { className: "flex items-center" }, /* @__PURE__ */ import_react25.default.createElement(
+      "input",
+      {
+        type: "checkbox",
+        checked: task.completed,
+        onChange: () => toggleTask(task.id, task.completed),
+        className: "mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded",
+        onClick: (e3) => e3.stopPropagation()
+      }
+    ), /* @__PURE__ */ import_react25.default.createElement("span", { className: task.completed ? "line-through text-gray-500" : "" }, task.title)), /* @__PURE__ */ import_react25.default.createElement("span", { className: "text-gray-500" }, open ? "\u25B2" : "\u25BC")), /* @__PURE__ */ import_react25.default.createElement(je.Panel, { className: "px-4 pt-2 pb-2 text-sm text-gray-500 bg-gray-50 rounded-b-lg" }, /* @__PURE__ */ import_react25.default.createElement("div", { className: "flex justify-between items-center" }, /* @__PURE__ */ import_react25.default.createElement("p", null, "Created: ", new Date(task.created_at).toLocaleString()), /* @__PURE__ */ import_react25.default.createElement(
+      "button",
+      {
+        onClick: () => deleteTask(task.id),
+        className: "text-red-500 hover:text-red-700"
+      },
+      "Delete"
+    )))))))
+  ));
 };
 var App_default = App;
 
